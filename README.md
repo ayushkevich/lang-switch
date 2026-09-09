@@ -2,6 +2,8 @@
 
 A Linux (X11) utility written in C++ that tracks keyboard layout switching and shows a popup with the name of the new layout in the center of the bottom third of the screen. The window hides automatically after 1 second.
 
+![lang-switch screenshot](./assets/screenshot.png)
+
 ## How it works
 
 - **Layout tracking.** `XkbMonitor` opens its own connection to the X server and subscribes to `XkbStateNotify` events from the XKB extension. When the keyboard group changes, a notification arrives with the new layout index.
