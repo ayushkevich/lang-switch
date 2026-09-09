@@ -1,26 +1,15 @@
 # lang-switch
 
-Утилита для Linux (X11) на C++: отслеживает смену раскладки клавиатуры и
-показывает всплывающее окно с названием новой раскладки по центру нижней трети
-экрана. Окно автоматически скрывается через 1 секунду.
+A Linux (X11) utility written in C++ that tracks keyboard layout switching and shows a popup with the name of the new layout in the center of the bottom third of the screen. The window hides automatically after 1 second.
 
-## Как это работает
+## How it works
 
-- **Отслеживание раскладки.** `XkbMonitor` открывает собственное соединение с
-  X-сервером и подписывается на `XkbStateNotify` события расширения XKB.
-  При смене группы клавиатуры приходит уведомление с новым индексом раскладки.
-- **Список раскладок.** Читается из root-window свойства `_XKB_RULES_NAMES`
-  (строка вида `us,ru`).
-- **Отображение.** SDL2 + SDL2_ttf рисуют безрамочное окно с текстом раскладки
-  (например, `Русский (ru)`). Окно помечается как `override-redirect`, поэтому
-  оконный менеджер его не показывает: приложение отсутствует на панели задач,
-  окно не перехватывает фокус и рисуется поверх текущего окна (например,
-  браузера). Центр окна — по горизонтали экрана и на отметке 5/6 высоты экрана,
-  то есть посередине нижней трети.
-- **Таймер.** `PopupController` — чистая конечная машина состояний: окно видно
-  ровно 1000 мс; повторная смена раскладки сбрасывает таймер и обновляет текст.
+- **Layout tracking.** `XkbMonitor` opens its own connection to the X server and subscribes to `XkbStateNotify` events from the XKB extension. When the keyboard group changes, a notification arrives with the new layout index.
+- **Layout list.** Read from the `_XKB_RULES_NAMES` property of the root window (a string like `us,ru`).
+- **Display.** SDL2 + SDL2_ttf render a frameless window showing the layout name (for example, `Русский (ru)`). The window is marked as `override-redirect`, so the window manager does not manage it: the app does not appear in the taskbar, the window does not take focus, and it is drawn above the current window (for example, the browser). The window is centered horizontally on the screen and positioned at 5/6 of the screen height, i.e. in the middle of the bottom third.
+- **Timer.** `PopupController` — a pure state machine: the window is visible for exactly 1000 ms; a repeated layout switch resets the timer and updates the text.
 
-## Зависимости
+## Dependencies
 
 Debian/Ubuntu/Linux Mint:
 
@@ -29,30 +18,29 @@ sudo apt install build-essential cmake pkg-config \
     libx11-dev libsdl2-dev libsdl2-ttf-dev
 ```
 
-GoogleTest подтягивается автоматически через CMake `FetchContent` (нужен доступ
-в интернет при конфигурации; при наличии пакета `libgtest-dev` можно использовать его).
+GoogleTest is fetched automatically via CMake `FetchContent` (internet access is required at configure time; if the `libgtest-dev` package is available, it can be used instead).
 
-## Сборка
+## Build
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j$(nproc)
 ```
 
-Бинарник: `build/lang-switch`.
+Binary: `build/lang-switch`.
 
-## Запуск
+## Running
 
 ```sh
 ./build/lang-switch
 ```
 
-Останов — `Ctrl+C` или закрытие окна (SIGTERM тоже обрабатывается).
-Отладочные сообщения XKB-монитора: `LANGSWITCH_DEBUG=1 ./build/lang-switch`.
+Stop with `Ctrl+C` or by closing the window (SIGTERM is handled as well).
+XKB monitor debug messages: `LANGSWITCH_DEBUG=1 ./build/lang-switch`.
 
-## Установка .deb-пакета (dpkg)
+## Installing the .deb package (dpkg)
 
-Сборка пакета:
+Building the package:
 
 ```sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
@@ -60,28 +48,24 @@ cmake --build build -j$(nproc)
 cpack -C Release -G DEB -d build
 ```
 
-Получится `build/lang-switch-1.1.1-Linux.deb`. Установка:
+This produces `build/lang-switch-1.1.1-Linux.deb`. To install:
 
 ```sh
 sudo dpkg -i build/lang-switch-1.1.1-Linux.deb
-# при пропущенных зависимостях:
+# if dependencies are missing:
 sudo apt -f install
 ```
 
-Удаление: `sudo dpkg -r lang-switch`.
+Remove with: `sudo dpkg -r lang-switch`.
 
-Пакет устанавливает:
+The package installs:
 
-- `/usr/bin/lang-switch` — саму утилиту;
-- `/etc/xdg/autostart/lang-switch.desktop` — автозапуск при старте сессии
-  рабочего стола (XDG autostart: приложение стартует в фоне при логине,
-  без окна терминала и без записи в панели задач).
+- `/usr/bin/lang-switch` — the utility itself;
+- `/etc/xdg/autostart/lang-switch.desktop` — autostart at desktop session login (XDG autostart: the app starts in the background at login, with no terminal window and no taskbar entry).
 
-После установки сессия подхватит автозапуск при следующем входе; чтобы
-запустить прямо сейчас: `/usr/bin/lang-switch &` (или `pkill -x lang-switch`
-для остановки).
+After installation, the session will pick up the autostart entry at the next login; to start it right now: `/usr/bin/lang-switch &` (or `pkill -x lang-switch` to stop it).
 
-Отключить автозапуск для конкретного пользователя:
+Disable autostart for a specific user:
 
 ```sh
 mkdir -p ~/.config/autostart
@@ -90,38 +74,35 @@ sed -i 's/X-GNOME-Autostart-enabled=true/X-GNOME-Autostart-enabled=false/' \
     ~/.config/autostart/lang-switch.desktop
 ```
 
-## Тесты
+## Tests
 
-Юнит-тесты (GoogleTest) покрывают чистую логику: разбор списка раскладок,
-человеческие имена раскладок, снятие вариантов (`us(dvorak)` -> `us`) и машину
-состояний попапа (видимость, авто-скрытие через 1 секунду, сброс таймера,
-конвертация XKB-группы).
+Unit tests (GoogleTest) cover the pure logic: parsing the layout list, human-readable layout names, stripping variants (`us(dvorak)` -> `us`), and the popup visibility state machine (visibility, auto-hide after 1 second, timer reset, XKB group conversion).
 
 ```sh
 ctest --test-dir build --output-on-failure
 ```
 
-## Структура проекта
+## Project structure
 
 ```
 include/langswitch/
-  layout_names.h      разбор имён раскладок (чистая логика)
-  popup_controller.h  машина состояний видимости попапа (чистая логика)
-  xkb_monitor.h       слушатель XkbStateNotify (X11/XKB)
+  layout_names.h      layout name parsing (pure logic)
+  popup_controller.h  popup visibility state machine (pure logic)
+  xkb_monitor.h       XkbStateNotify listener (X11/XKB)
 src/
   layout_names.cpp
   popup_controller.cpp
   xkb_monitor.cpp
-  main.cpp            SDL2-приложение: окно, рендер текста, событийный цикл
+  main.cpp            SDL2 app: window, text rendering, event loop
 tests/
   test_layout_names.cpp
   test_popup_controller.cpp
 packaging/
-  lang-switch.desktop  XDG autostart-ярлык для /etc/xdg/autostart
+  lang-switch.desktop  XDG autostart entry for /etc/xdg/autostart
 ```
 
-## Ограничения
+## Limitations
 
-- Только X11 (Wayland без XWayland-сессии клавиатурные события не перехватывает).
-- Имена раскладок мапятся встроенным словарём часто используемых; неизвестные
-  показываются как есть (код кода, например `zz`).
+- X11 only (on Wayland, without an XWayland session, keyboard events are not intercepted).
+- Layout names are mapped via a built-in dictionary of commonly used layouts; unknown ones are shown as-is (the code stays the code, e.g. `zz`).
+
