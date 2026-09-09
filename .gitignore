@@ -1,1 +1,4 @@
 build/
+_CPack_Packages/
+*.deb
+

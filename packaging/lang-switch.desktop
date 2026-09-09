@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=lang-switch
+Comment=Shows the current keyboard layout in a popup
+Exec=/usr/bin/lang-switch
+Icon=input-keyboard
+Terminal=false
+Hidden=false
+X-GNOME-Autostart-enabled=true
+X-GNOME-Autostart-Delay=2

@@ -61,3 +61,28 @@ if(LANGSWITCH_BUILD_TESTS)
   include(GoogleTest)
   gtest_discover_tests(langswitch_tests)
 endif()
+
+# Installation (used by the .deb package).
+install(TARGETS lang-switch RUNTIME DESTINATION bin)
+install(FILES packaging/lang-switch.desktop
+        DESTINATION /etc/xdg/autostart)
+install(FILES README.md
+        DESTINATION share/doc/lang-switch
+        RENAME README)
+
+set(CPACK_PACKAGE_NAME "lang-switch")
+set(CPACK_PACKAGE_VERSION "1.1.1")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
+    "Keyboard layout switch indicator popup for X11")
+set(CPACK_PACKAGE_DESCRIPTION
+  "Shows a popup with the new keyboard layout for one second in the middle
+  of the bottom third of the screen whenever the layout changes. Runs
+  silently in the background (no taskbar entry) and autostarts with the
+  desktop session.")
+set(CPACK_PACKAGE_CONTACT "Alexander <alexander@localhost>")
+set(CPACK_PACKAGE_SECTION "utils")
+set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS
+    "libc6, libstdc++6, libx11-6, libsdl2-2.0-0, libsdl2-ttf-2.0-0, fonts-dejavu-core")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS OFF)
+include(CPack)
